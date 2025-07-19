@@ -14,9 +14,9 @@ Setup is easy simply add your discord webhook to the config
 
 ---
 
-### Devlopment 
+### Development
 
-This plugin is still actively being devloped the following features will be added in future updates
+This plugin is still actively being developed the following features will be added in future updates
 
 - Report cooldown
 - Report Bans
