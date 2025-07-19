@@ -1,6 +1,7 @@
 package com.computerwhz.mcreportinggui.gui;
 
 import com.computerwhz.mcreportinggui.MCReportingGUI;
+import com.computerwhz.mcreportinggui.ReportCooldownHandler;
 import com.computerwhz.mcreportinggui.ReportHandler;
 import com.computerwhz.mcreportinggui.ReportType;
 import org.bukkit.Bukkit;
@@ -23,6 +24,7 @@ public class GUIManager implements Listener {
 
     private final Set<UUID> waitingForChat = new HashSet<>();
     private final Map<UUID, Consumer<String>> chatHandlers = new HashMap<>();
+    public static final ReportCooldownHandler cooldownHandler = new ReportCooldownHandler();
 
 
     @EventHandler
@@ -78,46 +80,52 @@ public class GUIManager implements Listener {
     }
 
     public void OpenReportGUI(Player player){
-        Inventory reportGUI = Bukkit.createInventory(new ReportingGUIInventoryHolder(), 36, ChatColor.DARK_RED.toString() + ChatColor.BOLD + "Report");
-        ItemStack playerReportItem = new ItemStack(Material.PLAYER_HEAD);
-        ItemMeta playerReportMeta = playerReportItem.getItemMeta();
-        Objects.requireNonNull(playerReportMeta).setDisplayName(ChatColor.RED + "Report Player");
-        List<String> playerReportLore = new ArrayList<>();
-        playerReportLore.add("Report a player for breaking the rules");
-        playerReportMeta.setLore(playerReportLore);
-        playerReportItem.setItemMeta(playerReportMeta);
+        if (!cooldownHandler.isOnCooldown(player.getUniqueId())){
+            Inventory reportGUI = Bukkit.createInventory(new ReportingGUIInventoryHolder(), 36, ChatColor.DARK_RED.toString() + ChatColor.BOLD + "Report");
+            ItemStack playerReportItem = new ItemStack(Material.PLAYER_HEAD);
+            ItemMeta playerReportMeta = playerReportItem.getItemMeta();
+            Objects.requireNonNull(playerReportMeta).setDisplayName(ChatColor.RED + "Report Player");
+            List<String> playerReportLore = new ArrayList<>();
+            playerReportLore.add("Report a player for breaking the rules");
+            playerReportMeta.setLore(playerReportLore);
+            playerReportItem.setItemMeta(playerReportMeta);
 
-        ItemStack bugReportItem = new ItemStack(Material.BEDROCK);
-        ItemMeta bugReportMeta = bugReportItem.getItemMeta();
-        Objects.requireNonNull(bugReportMeta).setDisplayName(ChatColor.GREEN + "Report Bug");
-        List<String> bugReportLore = new ArrayList<>();
-        bugReportLore.add("Report a server bug or exploit");
-        bugReportLore.add("(Include as much detail as possible)");
-        bugReportMeta.setLore(bugReportLore);
-        bugReportItem.setItemMeta(bugReportMeta);
+            ItemStack bugReportItem = new ItemStack(Material.BEDROCK);
+            ItemMeta bugReportMeta = bugReportItem.getItemMeta();
+            Objects.requireNonNull(bugReportMeta).setDisplayName(ChatColor.GREEN + "Report Bug");
+            List<String> bugReportLore = new ArrayList<>();
+            bugReportLore.add("Report a server bug or exploit");
+            bugReportLore.add("(Include as much detail as possible)");
+            bugReportMeta.setLore(bugReportLore);
+            bugReportItem.setItemMeta(bugReportMeta);
 
-        ItemStack otherReportItem = new ItemStack(Material.LECTERN);
-        ItemMeta otherReportMeta = otherReportItem.getItemMeta();
-        Objects.requireNonNull(otherReportMeta).setDisplayName("Report Other Issue");
-        List<String> otherReportLore = new ArrayList<>();
-        otherReportLore.add("Report another issue");
-        otherReportLore.add("Report something outside of the other categories");
-        otherReportMeta.setLore(otherReportLore);
-        otherReportItem.setItemMeta(otherReportMeta);
+            ItemStack otherReportItem = new ItemStack(Material.LECTERN);
+            ItemMeta otherReportMeta = otherReportItem.getItemMeta();
+            Objects.requireNonNull(otherReportMeta).setDisplayName(ChatColor.RESET + "Report Other Issue");
+            List<String> otherReportLore = new ArrayList<>();
+            otherReportLore.add("Report another issue");
+            otherReportLore.add("Report something outside of the other categories");
+            otherReportMeta.setLore(otherReportLore);
+            otherReportItem.setItemMeta(otherReportMeta);
 
-        ItemStack exitItem = new ItemStack(Material.BARRIER);
-        ItemMeta exitMeta = exitItem.getItemMeta();
-        Objects.requireNonNull(exitMeta).setDisplayName(ChatColor.RED.toString() + ChatColor.BOLD + "Exit");
-        List<String> exitLore = new ArrayList<>();
-        exitLore.add("Exit the report GUI");
-        exitMeta.setLore(exitLore);
-        exitItem.setItemMeta(exitMeta);
+            ItemStack exitItem = new ItemStack(Material.BARRIER);
+            ItemMeta exitMeta = exitItem.getItemMeta();
+            Objects.requireNonNull(exitMeta).setDisplayName(ChatColor.RED.toString() + ChatColor.BOLD + "Exit");
+            List<String> exitLore = new ArrayList<>();
+            exitLore.add("Exit the report GUI");
+            exitMeta.setLore(exitLore);
+            exitItem.setItemMeta(exitMeta);
 
-        reportGUI.setItem(11, playerReportItem);
-        reportGUI.setItem(13, bugReportItem);
-        reportGUI.setItem(15, otherReportItem);
-        reportGUI.setItem(35, exitItem);
-        player.openInventory(reportGUI);
+            reportGUI.setItem(11, playerReportItem);
+            reportGUI.setItem(13, bugReportItem);
+            reportGUI.setItem(15, otherReportItem);
+            reportGUI.setItem(35, exitItem);
+            player.openInventory(reportGUI);
+        }
+        else {
+            player.sendMessage(ChatColor.RED + "You must wait" + cooldownHandler.getTimeLeft(player.getUniqueId()) + "seconds to file another report");
+        }
+
     }
 
     public void OpenPlayerChooseGUI(Player viewer, int page) {
@@ -180,20 +188,35 @@ public class GUIManager implements Listener {
 
     public void StartPlayerReport(Player reporter, Player reported) {
         if (MCReportingGUI.getInstance().config.getBoolean("reporttypes.playerreport.enabled")) {
-            waitingForChat.add(reporter.getUniqueId());
-            chatHandlers.put(reporter.getUniqueId(), (String message) -> {
-                // This runs when the reporter sends their next message
-                if (Objects.equals(message, "cancel")){
-                    reporter.sendMessage(ChatColor.RED + "Your report was canceled");
+            if (!cooldownHandler.isOnCooldown(reporter.getUniqueId())){
+                if (!reported.hasPermission("MCReportingGUI.admin")){
+                    waitingForChat.add(reporter.getUniqueId());
+                    chatHandlers.put(reporter.getUniqueId(), (String message) -> {
+                        // This runs when the reporter sends their next message
+                        if (Objects.equals(message, "cancel")){
+                            reporter.sendMessage(ChatColor.RED + "Your report was canceled");
+                        }
+                        else {
+                            new ReportHandler().Report(reporter, reported, message, ReportType.playerReport);
+                            reporter.sendMessage(ChatColor.GREEN + "Your report has been submitted.");
+                            cooldownHandler.setCooldown(reporter.getUniqueId());
+                        }
+                    });
+                    reporter.closeInventory();
+                    reporter.sendMessage(ChatColor.YELLOW + "You are reporting " + reported.getDisplayName() + "\nPlease type your report in chat.\nType cancel to cancel" + ChatColor.RED + "\nWARNING making a false report is against the rules and may result in consequences" );
                 }
                 else {
-                    new ReportHandler().Report(reporter, reported, message, ReportType.playerReport);
-                    reporter.sendMessage(ChatColor.GREEN + "Your report has been submitted.");
+                    reporter.closeInventory();
+                    reporter.sendMessage(ChatColor.RED + "You cannot report this user");
+
                 }
-            });
-            reporter.closeInventory();
-            reporter.sendMessage(ChatColor.YELLOW + "You are reporting" + reported.getDisplayName() + "\nPlease type your report in chat.\nType cancel to cancel" + ChatColor.RED + "\nWARNING making a false report is against the rules and may result in consequences" );
+
+            }
+            else {
+                reporter.sendMessage(ChatColor.RED + "You must wait" + cooldownHandler.getTimeLeft(reporter.getUniqueId()) + "seconds to file another report");
+            }
         }
+
         else {
             reporter.sendMessage(ChatColor.RED + "Sorry player reporting is disabled");
         }
@@ -203,19 +226,24 @@ public class GUIManager implements Listener {
 
     public void StartBugReport(Player reporter){
         if (MCReportingGUI.getInstance().config.getBoolean("reporttypes.bugreport.enabled")){
-            waitingForChat.add(reporter.getUniqueId());
-            chatHandlers.put(reporter.getUniqueId(), (String message) -> {
-                // This runs when the reporter sends their next message
-                if (Objects.equals(message, "cancel")){
-                    reporter.sendMessage(ChatColor.RED + "Your report was canceled");
-                }
-                else {
-                    new ReportHandler().Report(reporter, null, message, ReportType.bugReport);
-                    reporter.sendMessage(ChatColor.GREEN + "Your report has been submitted.");
-                }
-            });
-            reporter.closeInventory();
-            reporter.sendMessage(ChatColor.YELLOW + "Please describe the bug in chat. Be as detailed as possible\nType cancel to cancel");
+            if (!cooldownHandler.isOnCooldown(reporter.getUniqueId())) {
+                waitingForChat.add(reporter.getUniqueId());
+                chatHandlers.put(reporter.getUniqueId(), (String message) -> {
+                    // This runs when the reporter sends their next message
+                    if (Objects.equals(message, "cancel")) {
+                        reporter.sendMessage(ChatColor.RED + "Your report was canceled");
+                    } else {
+                        new ReportHandler().Report(reporter, null, message, ReportType.bugReport);
+                        reporter.sendMessage(ChatColor.GREEN + "Your report has been submitted.");
+                        cooldownHandler.setCooldown(reporter.getUniqueId());
+                    }
+                });
+                reporter.closeInventory();
+                reporter.sendMessage(ChatColor.YELLOW + "Please describe the bug in chat. Be as detailed as possible\nType cancel to cancel");
+            }
+            else {
+                reporter.sendMessage(ChatColor.RED + "You must wait " + cooldownHandler.getTimeLeft(reporter.getUniqueId()) + " seconds to file another report");
+            }
         }
         else {
             reporter.sendMessage(ChatColor.RED + "Sorry bug reporting is disabled");
@@ -225,19 +253,25 @@ public class GUIManager implements Listener {
 
     public void StartOtherReport(Player reporter){
         if (MCReportingGUI.getInstance().config.getBoolean("reporttypes.otherreport.enabled")){
-            waitingForChat.add(reporter.getUniqueId());
-            chatHandlers.put(reporter.getUniqueId(), (String message) -> {
-                // This runs when the reporter sends their next message
-                if (Objects.equals(message, "cancel")){
-                    reporter.sendMessage(ChatColor.RED + "Your report was canceled");
-                }
-                else {
-                    new ReportHandler().Report(reporter, null, message, ReportType.otherReport);
-                    reporter.sendMessage(ChatColor.GREEN + "Your report has been submitted.");
-                }
-            });
-            reporter.closeInventory();
-            reporter.sendMessage(ChatColor.YELLOW + "Please explain your other issue\nType cancel to cancel");
+            if (!cooldownHandler.isOnCooldown(reporter.getUniqueId())){
+                waitingForChat.add(reporter.getUniqueId());
+                chatHandlers.put(reporter.getUniqueId(), (String message) -> {
+                    // This runs when the reporter sends their next message
+                    if (Objects.equals(message, "cancel")){
+                        reporter.sendMessage(ChatColor.RED + "Your report was canceled");
+                    }
+                    else {
+                        new ReportHandler().Report(reporter, null, message, ReportType.otherReport);
+                        reporter.sendMessage(ChatColor.GREEN + "Your report has been submitted.");
+                        cooldownHandler.setCooldown(reporter.getUniqueId());
+                    }
+                });
+                reporter.closeInventory();
+                reporter.sendMessage(ChatColor.YELLOW + "Please explain your other issue\nType cancel to cancel");
+            }
+            else {
+                reporter.sendMessage(ChatColor.RED + "You must wait" + cooldownHandler.getTimeLeft(reporter.getUniqueId()) + "seconds to file another report");
+            }
         }
         else{
             reporter.sendMessage(ChatColor.RED + "Sorry Other reporting is disabled");
