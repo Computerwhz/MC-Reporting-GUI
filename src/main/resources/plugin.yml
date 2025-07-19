@@ -1,0 +1,10 @@
+name: MCReportingGUI
+version: '${project.version}'
+main: com.computerwhz.mcreportinggui.MCReportingGUI
+api-version: '1.20'
+authors: [Computerwhz]
+commands:
+  report:
+    description: Opens reporting GUI
+
+

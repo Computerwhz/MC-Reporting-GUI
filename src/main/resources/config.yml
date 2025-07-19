@@ -1,0 +1,17 @@
+# Determines if plugin should run at all
+enabled: true
+
+reporttypes:
+  playerreport:
+    enabled: true
+  bugreport:
+    enabled: true
+  otherreport:
+    enabled: true
+
+discordwebhook:
+  enabled: true
+  webhookURL: ""
+
+
+
