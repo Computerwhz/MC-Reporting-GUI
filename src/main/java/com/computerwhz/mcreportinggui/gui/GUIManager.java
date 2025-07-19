@@ -101,7 +101,7 @@ public class GUIManager implements Listener {
 
             ItemStack otherReportItem = new ItemStack(Material.LECTERN);
             ItemMeta otherReportMeta = otherReportItem.getItemMeta();
-            Objects.requireNonNull(otherReportMeta).setDisplayName("Report Other Issue");
+            Objects.requireNonNull(otherReportMeta).setDisplayName(ChatColor.RESET + "Report Other Issue");
             List<String> otherReportLore = new ArrayList<>();
             otherReportLore.add("Report another issue");
             otherReportLore.add("Report something outside of the other categories");
@@ -207,7 +207,7 @@ public class GUIManager implements Listener {
                 }
                 else {
                     reporter.closeInventory();
-                    reporter.sendMessage("You can not report this user");
+                    reporter.sendMessage(ChatColor.RED + "You cannot report this user");
 
                 }
 
