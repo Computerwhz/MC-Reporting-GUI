@@ -18,7 +18,5 @@ Setup is easy simply add your discord webhook to the config
 
 This plugin is still actively being developed the following features will be added in future updates
 
-- Report cooldown
-- Report Bans
 - Staff Chat alerts
 - More

@@ -6,5 +6,7 @@ authors: [Computerwhz]
 commands:
   report:
     description: Opens reporting GUI
+  reportblacklist:
+    permission: MCReportingGUI.admin
 
 

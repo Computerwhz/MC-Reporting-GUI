@@ -1,6 +1,9 @@
 # Determines if plugin should run at all
 enabled: true
 
+# min time between reports seconds
+reportcooldowntime: 500
+
 reporttypes:
   playerreport:
     enabled: true

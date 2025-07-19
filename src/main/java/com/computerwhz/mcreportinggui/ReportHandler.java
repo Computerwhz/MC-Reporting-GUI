@@ -2,20 +2,14 @@ package com.computerwhz.mcreportinggui;
 
 import com.eduardomcb.discord.webhook.WebhookClient;
 import com.eduardomcb.discord.webhook.WebhookManager;
-import com.eduardomcb.discord.webhook.models.Author;
 import com.eduardomcb.discord.webhook.models.Embed;
 import com.eduardomcb.discord.webhook.models.Field;
 import com.eduardomcb.discord.webhook.models.Message;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import org.bukkit.inventory.meta.SkullMeta;
-
-import java.awt.*;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 
@@ -47,7 +41,7 @@ public class ReportHandler {
                     String formatedTimeNow = timeNow.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
                     List<Field> fields = new ArrayList<>();
                     fields.add(new Field("Report Created by", reporter.getDisplayName(), false));
-                    fields.add(new Field("Reported PLayer", reported.getDisplayName(), false));
+                    fields.add(new Field("Reported Player", reported.getDisplayName(), false));
 
                     Embed reportEmbed = new Embed();
                     reportEmbed.setColor(0xff0000);
